@@ -1,0 +1,410 @@
+package com.example.codeinfo;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.GridLayout.LayoutParams;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Vector;
+
+class DateAndTime{
+
+    public int hour,min,sec,date,month,year;
+
+}
+
+class Contest{
+
+    private String name,date,time,area,url;
+    private int star;
+    public DateAndTime dt;
+
+
+    public  Contest(String name,String date,String time,String area,String url){
+        this.name = name;
+        this.date = date;
+        this.time = time;
+        this.area = area;
+        this.url = url;
+        this.star=0;
+        dt = new DateAndTime();
+
+        fillDTCodechef();
+
+    }
+
+    public  Contest(String name,String date,String url){
+        this.name = name;
+        BreakDateIntoDateAndTime(date);
+        AdjustTime(this.time);
+        this.area = "Codeforces";
+        this.url = url;
+        this.star=0;
+
+        dt = new DateAndTime();
+
+        fillDTCodeforces();
+
+    }
+
+    private void findMonth(String month){
+        switch (month){
+            case "Jan": this.dt.month=1;break;
+            case "Feb": this.dt.month=2;break;
+            case "Mar": this.dt.month=3;break;
+            case "Apr": this.dt.month=4;break;
+            case "May": this.dt.month=5;break;
+            case "Jun": this.dt.month=6;break;
+            case "Jul": this.dt.month=7;break;
+            case "Aug": this.dt.month=8;break;
+            case "Sep": this.dt.month=9;break;
+            case "Oct": this.dt.month=10;break;
+            case "Nov": this.dt.month=11;break;
+            case "Dec": this.dt.month=12;break;
+        }
+    }
+
+    private void findDate(int s,int e,String date){
+        this.dt.date = 0;
+        for(int i=s;i<e;i++){
+            this.dt.date = this.dt.date*10+(date.charAt(i)-'0');
+        }
+    }
+
+    private void findYear(int s,int e,String date){
+
+        this.dt.year = 0;
+        for(int i=s;i<e;i++){
+            this.dt.year = this.dt.year*10+(date.charAt(i)-'0');
+        }
+
+    }
+
+    private void findHour(int s,int e,String date){
+        this.dt.hour = 0;
+        for(int i=s;i<e;i++){
+            this.dt.hour = this.dt.hour*10+(date.charAt(i)-'0');
+        }
+    }
+
+    private void findMin(int s,int e,String date){
+        this.dt.min = 0;
+        for(int i=s;i<e;i++){
+            this.dt.min = this.dt.min*10+(date.charAt(i)-'0');
+        }
+    }
+
+    private  void fillDTCodeforces(){
+
+        String month = this.date.substring(0,3);
+        findMonth(month);
+        findDate(4,6,this.date);
+        findYear(7,11,this.date);
+        findHour(0,2,this.time);
+        findMin(3,5,this.time);
+
+    }
+
+    private void fillDTCodechef(){
+
+        findDate(0,2,this.date);
+        String month = this.date.substring(3,6);
+        findMonth(month);
+        findYear(7,11,this.date);
+        findHour(12,14,this.date);
+        findMin(15,17,this.date);
+
+    }
+
+    private void BreakDateIntoDateAndTime(String date){
+
+        int n = date.length();
+        for(int j=0;j<n;j++){
+            if(date.charAt(j)==' '){
+                time = date.substring(j+1,n);
+                date = date.substring(0,j);
+                break;
+            }
+        }
+        this.date = date;
+        this.time = time;
+
+    }
+
+    private String AdjustTime(String time){
+
+        int hour=0,minutes=0;
+        boolean flag=false;
+        for(int j=0;j<time.length();j++){
+            if(time.charAt(j)==':'){flag=true;}
+            else if(!flag) {hour = hour*10+(time.charAt(j)-'0');}
+            else{minutes = minutes*10+(time.charAt(j)-'0');}
+        }
+        hour=(hour+2)%24;
+        minutes=(minutes+30)%60;
+        String h = String.valueOf(hour);
+        String m = String.valueOf(minutes);
+        if(h.length()==1) h = "0"+h;
+        if(m.length()==1) m = "0"+m;
+        time = h+":"+m;
+        return time;
+
+    }
+
+    public String getName(){
+        return this.name;
+    }
+
+    public String getDate(){
+        return this.date;
+    }
+
+    public String getTime(){
+        return this.time;
+    }
+
+    public String getArea(){
+        return this.area;
+    }
+
+    public String getUrl(){
+        return this.url;
+    }
+
+
+}
+
+
+public class Codeforces extends AppCompatActivity {
+
+    private LinearLayout parentLinearLayout;
+    private LinearLayout l;
+    private LinearLayout l2;
+    private TextView t;
+    private TextView t1;
+    private TextView t2;
+    private TextView t3;
+    private LinearLayout.LayoutParams param;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_home);
+        parentLinearLayout = (LinearLayout) findViewById(R.id.parentLayout);
+
+        param = new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+        );
+        param.setMargins(20,10,20,10);
+        new Content().execute();
+    }
+
+    private class Content extends AsyncTask<Void, Void, Void> {
+
+        ArrayList<Contest> contest =new ArrayList<Contest>();
+        Vector ColorList = new Vector();
+
+        int color=0;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            ColorList.add("#E75555");
+            ColorList.add("#6CDCDF");
+            ColorList.add("#F47CBF");
+            ColorList.add("#C39BD3");
+            ColorList.add("#A9E185");
+            ColorList.add("#F4DF62");
+
+
+            try {
+
+                Document doc = Jsoup.connect("https://codeforces.com/contests").get();
+                Element table = doc.select("table").get(0);
+                Elements rows = table.select("tr");
+
+                for (int i = 1; i < rows.size(); i++) {
+
+                    Element row = rows.get(i);
+                    String name = row.select("td").get(0).text();
+                    String date = row.select("td").get(2).select("span").text();
+                    Contest c = new Contest(name,date,"https://codeforces.com/contests");
+                    contest.add(c);
+
+                }
+
+                doc = Jsoup.connect("https://www.codechef.com/contests").get();
+                table = doc.select("table").get(1);
+                Elements tbody = table.select("tbody");
+                rows = tbody.select("tr");
+
+                for (int i = 1; i < rows.size(); i++) {
+
+                    Element row = rows.get(i);
+                    String name = row.select("td").get(0).text()+" - ONGOING CONTEST ";
+                    String date = row.select("td").get(2).text();
+                    String time = row.select("td").get(3).text();
+                    Contest c = new Contest(name,date,time,"Codechef","https://codechef.com/contests");
+                    contest.add(c);
+
+                }
+
+                doc = Jsoup.connect("https://www.codechef.com/contests").get();
+                table = doc.select("table").get(2);
+                tbody = table.select("tbody");
+                rows = tbody.select("tr");
+
+                for (int i = 1; i < rows.size(); i++) {
+
+                    Element row = rows.get(i);
+                    String name = row.select("td").get(0).text();
+                    String date = row.select("td").get(2).text();
+                    String time = row.select("td").get(3).text();
+                    Contest c = new Contest(name,date,time,"Codechef","https://codechef.com/contests");
+                    contest.add(c);
+
+                }
+
+                Comparator<Contest> cmp=new Comparator<Contest>() {
+
+                    @Override
+                    public int compare(Contest a, Contest b) {
+
+                        if(a.dt.year==b.dt.year){
+                            if(a.dt.month==b.dt.month){
+                                if(a.dt.date==b.dt.date){
+                                    if(a.dt.hour==b.dt.hour){
+                                        if(a.dt.min<=b.dt.min) return -1;
+                                        else return 1;
+                                    }
+                                    else if(a.dt.hour<b.dt.hour) return -1;
+                                    else return 1;
+                                }
+                                else if(a.dt.date<b.dt.date) return -1;
+                                else return 1;
+                            }
+                            else if(a.dt.month<b.dt.month) return -1;
+                            else return 1;
+                        }
+                        else if(a.dt.year<b.dt.year) return -1;
+                        else return 1;
+                    }
+
+                };
+
+                Collections.sort(contest,cmp);
+
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            for(int i=0;i<contest.size();i++){
+
+                l = new LinearLayout(com.example.codeinfo.HomeActivity.this);
+                l.setBackgroundResource(R.drawable.round_corner);
+                l.setLayoutParams(param);
+                l.setOrientation(LinearLayout.VERTICAL);
+
+                t = new TextView(com.example.codeinfo.HomeActivity.this);
+                t.setText(contest.get(i).getName());
+                t.setGravity(Gravity.CENTER);
+                t.setTextSize(17);
+                t.setTypeface(null,Typeface.BOLD);
+                l.addView(t);
+
+
+                View tr = new View(com.example.codeinfo.HomeActivity.this);
+                tr.setLayoutParams(new LinearLayout.LayoutParams( LayoutParams.MATCH_PARENT, 5 ));
+                tr.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                l.addView(tr);
+
+                l2 = new LinearLayout(com.example.codeinfo.HomeActivity.this);
+                l2.setOrientation(LinearLayout.HORIZONTAL);
+                t1 = new TextView(com.example.codeinfo.HomeActivity.this);
+                t1.setText(contest.get(i).getDate());
+                t1.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1f));
+                t1.setGravity(Gravity.CENTER);
+                t1.setTextSize(15);
+
+                View tr2 = new View(com.example.codeinfo.HomeActivity.this);
+                tr2.setLayoutParams(new LinearLayout.LayoutParams( 5, ViewGroup.LayoutParams.MATCH_PARENT));
+                tr2.setBackgroundColor(Color.parseColor("#FFFFFF"));
+
+                t2 = new TextView(com.example.codeinfo.HomeActivity.this);
+                t2.setText(contest.get(i).getTime());
+                t2.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 1f));
+                t2.setGravity(Gravity.CENTER);
+                t2.setTextSize(15);
+                l2.addView(t1);
+                l2.addView(tr2);
+                l2.addView(t2);
+
+                l.addView(l2);
+
+                View tr3 = new View(com.example.codeinfo.HomeActivity.this);
+                tr3.setLayoutParams(new LinearLayout.LayoutParams( LayoutParams.MATCH_PARENT, 5 ));
+                tr3.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                l.addView(tr3);
+
+                t3 = new TextView(com.example.codeinfo.HomeActivity.this);
+                String dynamicUrl = contest.get(i).getUrl();
+                String area = contest.get(i).getArea();
+                String linkedText = String.format("<a href=\"%s\">\"%s\" link to page </a> ", dynamicUrl,area) ;
+                t3.setText(Html.fromHtml(linkedText));
+                t3.setMovementMethod(LinkMovementMethod.getInstance());
+                t3.setGravity(Gravity.CENTER);
+                t3.setTextSize(15);
+
+                l.addView(t3);
+                l.setBackgroundColor(Color.parseColor(ColorList.get(color).toString()));
+                color = (color+1)%ColorList.size();
+                parentLinearLayout.addView(l);
+
+            }
+
+        }
+    }
+
+}
